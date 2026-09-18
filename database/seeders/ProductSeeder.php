@@ -14,7 +14,7 @@ class ProductSeeder extends Seeder
             ->count(180)
             ->create()
             ->each(
-                fn(Product $product) => StockMovement::factory()
+                fn (Product $product) => StockMovement::factory()
                     ->count(rand(5, 30))
                     ->for($product)
                     ->create()
@@ -25,7 +25,7 @@ class ProductSeeder extends Seeder
             ->count(20)
             ->create()
             ->each(
-                fn(Product $product) => StockMovement::factory()
+                fn (Product $product) => StockMovement::factory()
                     ->count(rand(5, 30))
                     ->for($product)
                     ->create()

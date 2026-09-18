@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\DTOs\Products\CreateProductData;
 use Carbon\Carbon;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
 
 /**
  * @property string $id
@@ -29,6 +29,7 @@ class Product extends Model
 {
     use HasFactory;
     use HasUuids;
+    use Searchable;
 
     protected $fillable = [
         'name',
@@ -46,6 +47,14 @@ class Product extends Model
         ];
     }
 
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'sku' => $this->sku,
+        ];
+    }
+
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
@@ -58,8 +67,10 @@ class Product extends Model
         );
     }
 
-    public function scopeBelowThreshold(Builder $query): Builder
+    public function scopeBelowThreshold(Builder $query, bool $value = true): Builder
     {
-        return $query->whereColumn('quantity', '<', 'reorder_threshold');
+        return $value
+            ? $query->whereColumn('quantity', '<', 'reorder_threshold')
+            : $query;
     }
 }
