@@ -5,6 +5,7 @@ use App\Http\Controllers\Products\DeleteController;
 use App\Http\Controllers\Products\IndexController;
 use App\Http\Controllers\Products\ShowController;
 use App\Http\Controllers\Products\UpdateController;
+use App\Http\Controllers\StockMovements\CreateController as StockMovementCreateController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -18,7 +19,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('{product}', ShowController::class)->name('show');
         Route::put('{product}', UpdateController::class)->name('update');
         Route::delete('{product}', DeleteController::class)->name('delete');
+        Route::post('{product}/movements', StockMovementCreateController::class)->name('movements.create');
     });
+
+    Route::patch('notifications/{notification}', UpdateController::class)->name('notifications.update');
 });
 
 require __DIR__.'/settings.php';
