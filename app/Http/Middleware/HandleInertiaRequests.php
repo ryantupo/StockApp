@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Resources\NotificationResource;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +43,14 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'notifications' => fn () => $request->user()
+                ? [
+                    'unread_count' => $request->user()->unreadNotifications()->count(),
+                    'recent' => NotificationResource::collection(
+                        $request->user()->notifications()->latest()->limit(10)->get()
+                    ),
+                ]
+                : null,
         ];
     }
 }
