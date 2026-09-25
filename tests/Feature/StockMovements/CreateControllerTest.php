@@ -22,14 +22,17 @@ class CreateControllerTest extends TestCase
 
     public function test_can_record_a_positive_movement(): void
     {
-        $product = Product::factory()->create(['quantity' => 50, 'reorder_threshold' => 10]);
+        $product = Product::factory()->create([
+            'quantity' => 50,
+            'reorder_threshold' => 10,
+        ]);
 
         $response = $this->post(route('products.movements.create', $product), [
             'quantity_change' => 25,
             'reason' => 'Restock delivery',
         ]);
 
-        $response->assertRedirect(route('products.show', $product));
+        $response->assertRedirect(route('products.index'));
 
         $this->assertDatabaseHas('stock_movements', [
             'product_id' => $product->id,
@@ -42,7 +45,10 @@ class CreateControllerTest extends TestCase
 
     public function test_can_record_a_negative_movement(): void
     {
-        $product = Product::factory()->create(['quantity' => 50, 'reorder_threshold' => 10]);
+        $product = Product::factory()->create([
+            'quantity' => 50,
+            'reorder_threshold' => 10,
+        ]);
 
         $this->post(route('products.movements.create', $product), [
             'quantity_change' => -20,
@@ -75,19 +81,25 @@ class CreateControllerTest extends TestCase
         $response->assertSessionHasErrors('reason');
     }
 
-    public function test_sends_alert_when_crossing_below_threshold(): void
+    public function test_sends_alert_to_all_users_when_crossing_below_threshold(): void
     {
         Notification::fake();
 
-        $manager = User::factory()->create(['email' => config('stock.manager_email')]);
-        $product = Product::factory()->create(['quantity' => 20, 'reorder_threshold' => 10]);
+        $users = User::factory()->count(3)->create();
+
+        $product = Product::factory()->create([
+            'quantity' => 20,
+            'reorder_threshold' => 10,
+        ]);
 
         $this->post(route('products.movements.create', $product), [
             'quantity_change' => -15,
             'reason' => 'Large order',
         ]);
 
-        Notification::assertSentTo($manager, LowStockAlert::class);
+        foreach ($users as $user) {
+            Notification::assertSentTo($user, LowStockAlert::class);
+        }
 
         $this->assertNotNull($product->fresh()->low_stock_alerted_at);
     }
@@ -96,8 +108,13 @@ class CreateControllerTest extends TestCase
     {
         Notification::fake();
 
-        $manager = User::factory()->create(['email' => config('stock.manager_email')]);
-        $product = Product::factory()->create(['quantity' => 5, 'reorder_threshold' => 10, 'low_stock_alerted_at' => now()]);
+        $users = User::factory()->count(3)->create();
+
+        $product = Product::factory()->create([
+            'quantity' => 5,
+            'reorder_threshold' => 10,
+            'low_stock_alerted_at' => now(),
+        ]);
 
         $this->post(route('products.movements.create', $product), [
             'quantity_change' => -2,
@@ -105,14 +122,23 @@ class CreateControllerTest extends TestCase
         ]);
 
         Notification::assertNothingSent();
+
+        foreach ($users as $user) {
+            Notification::assertNotSentTo($user, LowStockAlert::class);
+        }
     }
 
     public function test_can_alert_again_after_recovering_above_threshold(): void
     {
         Notification::fake();
 
-        $manager = User::factory()->create(['email' => config('stock.manager_email')]);
-        $product = Product::factory()->create(['quantity' => 5, 'reorder_threshold' => 10, 'low_stock_alerted_at' => now()]);
+        $users = User::factory()->count(3)->create();
+
+        $product = Product::factory()->create([
+            'quantity' => 5,
+            'reorder_threshold' => 10,
+            'low_stock_alerted_at' => now(),
+        ]);
 
         // Recover above threshold - should clear the flag, no alert
         $this->post(route('products.movements.create', $product), [
@@ -123,21 +149,27 @@ class CreateControllerTest extends TestCase
         $this->assertNull($product->fresh()->low_stock_alerted_at);
         Notification::assertNothingSent();
 
-        // Dip below again - should alert fresh
+        // Dip below again - should alert all users
         $this->post(route('products.movements.create', $product), [
             'quantity_change' => -20,
             'reason' => 'Big order',
         ]);
 
-        Notification::assertSentTo($manager, LowStockAlert::class);
+        foreach ($users as $user) {
+            Notification::assertSentTo($user, LowStockAlert::class);
+        }
     }
 
     public function test_does_not_alert_when_staying_above_threshold(): void
     {
         Notification::fake();
 
-        User::factory()->create(['email' => config('stock.manager_email')]);
-        $product = Product::factory()->create(['quantity' => 100, 'reorder_threshold' => 10]);
+        User::factory()->count(3)->create();
+
+        $product = Product::factory()->create([
+            'quantity' => 100,
+            'reorder_threshold' => 10,
+        ]);
 
         $this->post(route('products.movements.create', $product), [
             'quantity_change' => -5,

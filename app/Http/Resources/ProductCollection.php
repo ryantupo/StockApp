@@ -10,13 +10,20 @@ class ProductCollection extends ResourceCollection
 {
     public $collects = ProductResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection,
+            'data' => $this->collection->values(),
+            'links' => $this->resource->toArray()['links'],
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function with(Request $request): array
     {
         return [

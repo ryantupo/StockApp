@@ -5,17 +5,15 @@ namespace App\Actions\StockMovements;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\LowStockAlert;
+use Illuminate\Support\Facades\Notification;
 
 class NotifyLowStockAction
 {
     public function execute(Product $product): void
     {
-        $manager = User::where('email', config('stock.manager_email'))->first();
-
-        if (! $manager) {
-            return;
-        }
-
-        $manager->notify(new LowStockAlert($product));
+        Notification::send(
+            User::all(),
+            new LowStockAlert($product)
+        );
     }
 }

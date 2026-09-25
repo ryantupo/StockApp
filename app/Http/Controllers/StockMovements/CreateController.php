@@ -11,10 +11,16 @@ use Illuminate\Http\RedirectResponse;
 
 class CreateController extends Controller
 {
-    public function __invoke(CreateRequest $request, Product $product, CreateAction $action): RedirectResponse
-    {
-        $action->execute($product, CreateStockMovementData::fromRequest($request));
+    public function __invoke(
+        CreateRequest $request,
+        Product $product,
+        CreateAction $action
+    ): RedirectResponse {
+        $action->execute(
+            $product,
+            CreateStockMovementData::fromRequest($request)
+        );
 
-        return to_route('products.show', $product);
+        return to_route('products.index');
     }
 }
