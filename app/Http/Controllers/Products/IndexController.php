@@ -31,7 +31,13 @@ class IndexController extends Controller
 
         return Inertia::render('Products/Index', [
             'products' => new ProductCollection($products),
-            'filters' => $request->only(['filter', 'sort']),
+            'filters' => [
+                'filter' => [
+                    'search' => $request->input('filter.search'),
+                    'below_threshold' => $request->input('filter.below_threshold'),
+                ],
+                'sort' => $request->input('sort'),
+            ],
         ]);
     }
 }

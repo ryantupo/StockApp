@@ -11,6 +11,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class ProductResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
@@ -20,9 +23,6 @@ class ProductResource extends JsonResource
             'quantity' => $this->quantity,
             'reorder_threshold' => $this->reorder_threshold,
             'is_below_threshold' => $this->is_below_threshold,
-            'stock_movements' => new StockMovementCollection(
-                $this->whenLoaded('stockMovements')
-            ),
         ];
     }
 }

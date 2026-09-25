@@ -13,31 +13,51 @@ class SendLowStockDigestCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_sends_digest_when_products_are_below_threshold(): void
+    public function test_sends_digest_to_all_users_when_products_are_below_threshold(): void
     {
         Notification::fake();
 
-        $manager = User::factory()->create(['email' => config('stock.manager_email')]);
-        Product::factory()->belowThreshold()->count(3)->create();
-        Product::factory()->count(2)->create(['quantity' => 500, 'reorder_threshold' => 10]);
+        $users = User::factory()->count(3)->create();
 
-        $this->artisan('stock:digest');
+        Product::factory()
+            ->belowThreshold()
+            ->count(3)
+            ->create();
 
-        Notification::assertSentTo(
-            $manager,
-            LowStockDigest::class,
-            fn (LowStockDigest $notification) => $notification->products->count() === 3
-        );
+        Product::factory()
+            ->count(2)
+            ->create([
+                'quantity' => 500,
+                'reorder_threshold' => 10,
+            ]);
+
+        $this->artisan('stock:digest')
+            ->assertSuccessful();
+
+        foreach ($users as $user) {
+            Notification::assertSentTo(
+                $user,
+                LowStockDigest::class,
+                fn (LowStockDigest $notification) => $notification->products->count() === 3
+            );
+        }
     }
 
     public function test_sends_nothing_when_no_products_are_below_threshold(): void
     {
         Notification::fake();
 
-        User::factory()->create(['email' => config('stock.manager_email')]);
-        Product::factory()->count(5)->create(['quantity' => 500, 'reorder_threshold' => 10]);
+        User::factory()->count(3)->create();
 
-        $this->artisan('stock:digest');
+        Product::factory()
+            ->count(5)
+            ->create([
+                'quantity' => 500,
+                'reorder_threshold' => 10,
+            ]);
+
+        $this->artisan('stock:digest')
+            ->assertSuccessful();
 
         Notification::assertNothingSent();
     }

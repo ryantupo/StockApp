@@ -9,10 +9,14 @@ class StockMovementCollection extends ResourceCollection
 {
     public $collects = StockMovementResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->collection,
+            'data' => $this->collection->values(),
+            'links' => $this->resource->toArray()['links'] ?? [],
         ];
     }
 }

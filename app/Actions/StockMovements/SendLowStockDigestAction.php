@@ -5,6 +5,7 @@ namespace App\Actions\StockMovements;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\LowStockDigest;
+use Illuminate\Support\Facades\Notification;
 
 class SendLowStockDigestAction
 {
@@ -16,12 +17,9 @@ class SendLowStockDigestAction
             return;
         }
 
-        $manager = User::where('email', config('stock.manager_email'))->first();
-
-        if (! $manager) {
-            return;
-        }
-
-        $manager->notify(new LowStockDigest($products));
+        Notification::send(
+            User::all(),
+            new LowStockDigest($products)
+        );
     }
 }

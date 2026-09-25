@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Notifications\ClearController;
+use App\Http\Controllers\Notifications\UpdateController as NotificationUpdateController;
 use App\Http\Controllers\Products\CreateController;
 use App\Http\Controllers\Products\DeleteController;
 use App\Http\Controllers\Products\IndexController;
@@ -22,7 +24,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{product}/movements', StockMovementCreateController::class)->name('movements.create');
     });
 
-    Route::patch('notifications/{notification}', UpdateController::class)->name('notifications.update');
+    Route::patch('notifications/{notification}', NotificationUpdateController::class)->name('notifications.update');
+    Route::delete('notifications/read', ClearController::class)->name('notifications.clear');
 });
 
 require __DIR__.'/settings.php';

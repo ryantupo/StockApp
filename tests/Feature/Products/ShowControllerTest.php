@@ -45,7 +45,7 @@ class ShowControllerTest extends TestCase
 
         $response->assertInertia(
             fn (AssertableInertia $page) => $page
-                ->has('product.data.stock_movements.data', 2)
+                ->has('movements.data', 2)
         );
     }
 
